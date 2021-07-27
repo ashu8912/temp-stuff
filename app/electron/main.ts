@@ -7,6 +7,7 @@ import Store from 'electron-store';
 import { i18n as I18n } from 'i18next';
 import open from 'open';
 import path from 'path';
+import semver from 'semver';
 import url from 'url';
 import yargs from 'yargs';
 import i18n from './i18next.config';
@@ -295,13 +296,17 @@ function startElecron() {
     mainWindow.webContents.on('dom-ready', () => {
       const octokit = new Octokit();
 
-      async function fetchLatestRelease() {
-        const response = await octokit.request('GET /repos/{owner}/{repo}/releases/latest', {
+      async function fetchRelease() {
+        const githubReleaseURL = `GET /repos/{owner}/{repo}/releases/latest`;
+        const response = await octokit.request(githubReleaseURL, {
           owner: 'kinvolk',
           repo: 'headlamp',
         });
-
-        if (response.data.name !== appVersion) {
+        if (
+          semver.gt(response.data.name, appVersion) &&
+          !response.data.name.startsWith('headlamp-helm') &&
+          !process.env.FLATPAK_ID
+        ) {
           mainWindow.webContents.send('update_available', {
             downloadURL: response.data.html_url,
           });
@@ -313,14 +318,20 @@ function startElecron() {
         const storedAppVersion = store.get('app_version');
         if (!storedAppVersion) {
           store.set('app_version', appVersion);
-        } else if (storedAppVersion !== appVersion) {
+        } else if (semver.lt(storedAppVersion as string, appVersion)) {
+          // get the release notes for the version with which the app was built with
+          const githubReleaseURL = `GET /repos/{owner}/{repo}/releases/tags/v${appVersion}`;
+          const response = await octokit.request(githubReleaseURL, {
+            owner: 'kinvolk',
+            repo: 'headlamp',
+          });
           mainWindow.webContents.send('showReleaseNotes', { releaseNotes: response.data.body });
           // set the store version to latest so that we don't show release notes on
           // every start of app
           store.set('app_version', appVersion);
         }
       }
-      fetchLatestRelease();
+      fetchRelease();
     });
 
     mainWindow.on('closed', () => {
