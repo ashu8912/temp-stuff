@@ -311,18 +311,19 @@ function startElecron() {
       const octokit = new Octokit();
 
       async function fetchRelease() {
-        const githubReleaseURL = `GET /repos/{owner}/{repo}/releases/latest`;
+        const githubReleaseURL = `GET /repos/{owner}/{repo}/releases`;
+        // get me all the releases -> default decreasing order of releases
         const response = await octokit.request(githubReleaseURL, {
           owner: 'kinvolk',
           repo: 'headlamp',
         });
+        const latestRelease = response.data.find((release) => !release.name.startsWith('headlamp-helm'))
         if (
-          semver.gt(response.data.name, appVersion) &&
-          !response.data.name.startsWith('headlamp-helm') &&
+          semver.gt(latestRelease.name, appVersion) &&
           !process.env.FLATPAK_ID
         ) {
           mainWindow.webContents.send('update_available', {
-            downloadURL: response.data.html_url,
+            downloadURL: latestRelease.html_url,
           });
         }
         /*
@@ -339,7 +340,7 @@ function startElecron() {
             owner: 'kinvolk',
             repo: 'headlamp',
           });
-          mainWindow.webContents.send('showReleaseNotes', { releaseNotes: response.data.body });
+          mainWindow.webContents.send('showReleaseNotes', { releaseNotes: response.data.body, appVersion });
           // set the store version to latest so that we don't show release notes on
           // every start of app
           store.set('app_version', appVersion);
