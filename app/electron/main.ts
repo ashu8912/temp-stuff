@@ -317,11 +317,10 @@ function startElecron() {
           owner: 'kinvolk',
           repo: 'headlamp',
         });
-        const latestRelease = response.data.find((release) => !release.name.startsWith('headlamp-helm'))
-        if (
-          semver.gt(latestRelease.name, appVersion) &&
-          !process.env.FLATPAK_ID
-        ) {
+        const latestRelease = response.data.find(
+          release => !release.name.startsWith('headlamp-helm')
+        );
+        if (semver.gt(latestRelease.name, appVersion) && !process.env.FLATPAK_ID) {
           mainWindow.webContents.send('update_available', {
             downloadURL: latestRelease.html_url,
           });
@@ -340,7 +339,10 @@ function startElecron() {
             owner: 'kinvolk',
             repo: 'headlamp',
           });
-          mainWindow.webContents.send('showReleaseNotes', { releaseNotes: response.data.body, appVersion });
+          mainWindow.webContents.send('showReleaseNotes', {
+            releaseNotes: response.data.body,
+            appVersion,
+          });
           // set the store version to latest so that we don't show release notes on
           // every start of app
           store.set('app_version', appVersion);
