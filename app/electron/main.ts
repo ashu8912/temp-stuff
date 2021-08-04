@@ -314,8 +314,8 @@ function startElecron() {
         const githubReleaseURL = `GET /repos/{owner}/{repo}/releases`;
         // get me all the releases -> default decreasing order of releases
         const response = await octokit.request(githubReleaseURL, {
-          owner: 'kinvolk',
-          repo: 'headlamp',
+          owner: 'ashu8912',
+          repo: 'temp-stuff',
         });
         const latestRelease = response.data.find(
           release => !release.name.startsWith('headlamp-helm')
