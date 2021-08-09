@@ -24,7 +24,9 @@ export default function ReleaseNotesModal(props: ReleaseNotesModalProps) {
   const releaseNotesStyle = {
     padding: '1rem',
     maxHeight: '80%',
-    overflow: 'scroll',
+    minWidth: '50%',
+    minHeight: '50%',
+    overflow: 'auto',
   };
 
   return (
